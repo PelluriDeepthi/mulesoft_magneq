@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="7e7f863c-d6d9-4e78-b2e0-5ca8dec1af4f" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="60ed89b3-ada0-413f-a1a7-e4cdb6657d97" >
+		<db:my-sql-connection host="iltdb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
+	</db:config>
+	<http:request-config name="HTTP_Request_config" doc:name="HTTP Request config" doc:id="4793c5cd-995e-4995-980d-8df5e544d56c" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<flow name="onerror_flightsFlow" doc:id="dfafd828-c6a5-44c8-a771-eb219777e117" >
+		<http:listener doc:name="Listener" doc:id="531a939d-194f-4fe8-a447-70929cc1c1d9" config-ref="HTTP_Listener_config" path="/testw"/>
+		<logger level="INFO" doc:name="Logger" doc:id="dcfea449-4ecf-46cd-8f21-e9ffc693c541" />
+		<db:select doc:name="Select" doc:id="b61baf9d-2ee6-4f92-8496-d24d748df8dd" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from accounts]]></db:sql>
+		</db:select>
+		<flow-ref doc:name="Flow Reference" doc:id="7e95626e-0570-4c76-94a4-08590feafec6" name="onerror_flightsFlow1"/>
+		<ee:transform doc:name="Transform Message" doc:id="baaec982-0f6b-49b4-952b-5a377db5492a">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="f36f363a-7c6d-479f-9ba0-0b0ff3b2a19a" type="ANY">
+				<ee:transform doc:name="Transform Message" doc:id="f689fc68-e470-4bea-b712-abb7c76e32f1" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var err = error.errorType.identifier
+---
+{
+	status : "error",
+	message : 
+		if (err == "CONNECTIVITY")
+			"something went wrong, please check your DB configuration"
+		else if (err == "EXPRESSION")
+			"something went wrong, please check your TM"
+		else if (err == "BAD_SQL_SYNTAX" or err == "QUERY_EXECUTION")
+			"Something went wrong, please check your SQL Query"
+		else
+			"something is wrong"
+}
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="onerror_flightsFlow1" doc:id="af11d5f2-1b2e-4f60-baeb-710b53a43bfc" >
+		<http:request doc:name="Request" doc:id="e0a3ce20-f4f7-4174-a48c-39f3c7465ee9" config-ref="HTTP_Request_config"/>
+		<ee:transform doc:name="Transform Message" doc:id="f86a6d73-053a-4955-8b2d-f1af6edbefbf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9dac5bdc-f8ca-4e11-beb2-89687c5424f3" >
+				<ee:transform doc:name="Transform Message" doc:id="76e70360-ff1d-4d71-9c68-09dde559b645" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+</mule>
