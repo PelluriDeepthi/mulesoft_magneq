@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="eed54b13-6d32-4f3e-b3c2-3f5412e70c41" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_config" doc:name="HTTP Request config" doc:id="2c4eaf16-be38-422b-8ec7-4c626fccaa9e" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<flow name="testFlow" doc:id="51a3596c-2979-4362-b0eb-009fcc10040d" >
+		<http:listener doc:name="Listener" doc:id="f28fb18f-faae-43a3-8445-816e9506fd30" config-ref="HTTP_Listener_config" path="/test"/>
+		<logger level="INFO" doc:name="Logger" doc:id="03777462-5eee-41a7-9f38-37022c3563e5" message="flow started"/>
+		<ee:transform doc:name="Transform Message" doc:id="4d08e092-c6ae-456c-ae5d-b7ed81ba6e06">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="origin"><![CDATA[attributes.queryParams.source]]></ee:set-variable>
+				<ee:set-variable variableName="destination" ><![CDATA[attributes.queryParams.target]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<http:request doc:name="Request" doc:id="5c49987b-0dda-49e2-973a-4c552abcd79d" config-ref="HTTP_Request_config" path="/api/flights">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	origin : vars.origin,
+	destination : vars.destination
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="d09d18cc-41c9-463d-a2aa-0ff7bb0a4121" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="26f36f3f-783e-4866-892c-3e9098599f9d" message="flow ended"/>
+	</flow>
+</mule>
