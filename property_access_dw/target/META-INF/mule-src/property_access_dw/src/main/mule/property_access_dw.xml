@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="759100ed-7a25-4986-880a-8a2116743c85" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="d3b17c1a-3be5-4aaa-bbc6-ec8b72693951" file="C:\AnypointStudio\mule\property_file\access-external-dw\external-dev.properties" />
+	<flow name="property_access_dwFlow" doc:id="d383e1ef-2b2a-4241-b9ce-833033841932" >
+		<http:listener doc:name="Listener" doc:id="9f66a1aa-08d7-4bea-ba00-c502592e254c" config-ref="HTTP_Listener_config" path="/accessdw"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e085cf33-0f54-4752-9c78-cdbae6483760" />
+		<ee:transform doc:name="Transform Message" doc:id="2706f6be-d56f-4e7b-9662-cde853cc3b24" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	Mule::lookup('flow2', {test: 'hello'})
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="56994edf-205b-4968-a335-7604c604f49b" />
+	</flow>
+	<flow name="property_access_dwFlow1" doc:id="8397fb9e-aa21-447f-94bd-5cd61feafff9" >
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="694ad26d-24a0-4299-89f4-aa7de90d483f" />
+	</flow>
+	<sub-flow name="property_access_dwSub_Flow" doc:id="f711ed39-8b33-43b8-867d-487374c7ce81" >
+		<logger level="INFO" doc:name="Logger" doc:id="a3ef32f5-926b-4618-900a-2b26982c2a1f" />
+		<ee:transform doc:name="Transform Message" doc:id="6e77030a-146a-4c21-baa1-6cd30fb46652" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"hello"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="5151efe4-abd5-41f1-baed-1eb285812315" />
+	</sub-flow>
+</mule>
