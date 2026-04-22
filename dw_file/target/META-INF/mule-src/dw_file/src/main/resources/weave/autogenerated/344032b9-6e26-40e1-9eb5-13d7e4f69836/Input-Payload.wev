@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_344032b9_6e26_40e1_9eb5_13d7e4f69836_Input_Payload = Array<{|  name: String,   age: Number|}>
+

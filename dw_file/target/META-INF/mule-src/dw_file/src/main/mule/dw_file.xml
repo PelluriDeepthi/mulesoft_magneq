@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="e466f96d-55f1-4dd1-819f-3873933fa705" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<flow name="dw_fileFlow" doc:id="23025a40-ec55-4ede-b0a9-0b8650ec75b2" >
+		<http:listener doc:name="Listener" doc:id="916a407a-7c09-455d-9c5d-2afd8e1d29e4" config-ref="HTTP_Listener_config" path="/dwfile"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e20061f5-b880-460b-9d4d-d7a0eeb1d0d7" />
+		<set-payload value='#[[&#10;   {&#10;     "name": "Mariano",&#10;     "age": 37&#10;   },&#10;   {&#10;     "name": "Shoki",&#10;     "age": 30&#10;   }&#10;]]' doc:name="Set Payload" doc:id="79d9497d-3461-4f1e-90f0-db5a9e2c59f6" />
+		<ee:transform doc:name="Transform Message" doc:id="8627f5f5-f030-47c1-b9ed-f001794b720d">
+			<ee:message>
+				<ee:set-payload resource="weave/dw_file.dwl" />
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="24ca8eb4-b8cf-4495-b1e9-db20a7e819af" name="dw_fileSub_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="0b25535d-c9f2-4c73-8cdd-9c4b91a9d520" />
+	</flow>
+	<sub-flow name="dw_fileSub_Flow" doc:id="344032b9-6e26-40e1-9eb5-13d7e4f69836" >
+		<logger level="INFO" doc:name="Logger" doc:id="3f0bead2-da04-4e71-96de-548c51ba7571" />
+		<set-payload value='#[[&#10;   {&#10;     "name": "Mariano",&#10;     "age": 37&#10;   },&#10;   {&#10;     "name": "Shoki",&#10;     "age": 30&#10;   }&#10;]]' doc:name="Set Payload" doc:id="70e48b23-1484-43d8-af71-da99693ad614" />
+		<ee:transform doc:name="Transform Message" doc:id="5cedb3c4-d809-4b27-8be0-004925ca5ef4" >
+			<ee:message >
+				<ee:set-payload resource="weave/dw_file.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="5571ee54-58f3-456f-b9a1-f107b0a5ad58" />
+	</sub-flow>
+</mule>

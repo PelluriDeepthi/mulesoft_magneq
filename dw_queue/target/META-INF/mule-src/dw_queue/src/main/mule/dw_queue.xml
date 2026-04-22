@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ff27e912-0669-4561-8d1b-c976a77d32c5" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="1cc5f221-2b1a-4a72-8b18-fedcc070548d">
+		<vm:connection />
+		<vm:queues >
+			<vm:queue queueName="test" />
+		</vm:queues>
+	</vm:config>
+	<flow name="dw_queueFlow" doc:id="07129a77-cae6-410f-98a1-90ad44248fc0" >
+		<http:listener doc:name="Listener" doc:id="c34568fc-56ba-43e1-970a-593b68bedc9f" config-ref="HTTP_Listener_config" path="/dwqueue"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7eddff26-3e3a-4406-be66-3e128c416033" />
+		<set-payload value='#[[&#10;   {&#10;     "name": "Mariano",&#10;     "age": 37&#10;   },&#10;   {&#10;     "name": "Shoki",&#10;     "age": 30&#10;   }&#10;]]' doc:name="Set Payload" doc:id="9db5da6d-ee7e-467e-b787-94d713f4cc92" />
+		<ee:transform doc:name="Transform Message" doc:id="c0f029cd-f81d-4733-a8cd-3bf3efb4bf0e" >
+			<ee:message >
+				<ee:set-payload resource="dw_file.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="0baf59fc-d1d7-4217-b9aa-e355cc2323c9" />
+		<vm:publish queueName="test" doc:id="fd8d65d0-0238-4ab3-8f4a-540945ae50c1" sendCorrelationId="AUTO" config-ref="VM_Config"/>
+	</flow>
+	<flow name="dw_queueFlow1" doc:id="7ae9c753-d16c-44a5-87b4-f46e210d4b7d" >
+		<vm:listener doc:name="Listener" doc:id="c50ae1e3-a53a-407b-ac6c-97dc3f87edec" queueName="test" config-ref="VM_Config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="b1352e93-9d56-44fa-8d96-36b4fc4f3ebd" />
+		<set-payload value='#[[&#10;   {&#10;     "name": "Mariano",&#10;     "age": 37&#10;   },&#10;   {&#10;     "name": "Shoki",&#10;     "age": 30&#10;   }&#10;]]' doc:name="Set Payload" doc:id="123e0259-125a-44b6-8e8d-05c2c3a23929" />
+		<ee:transform doc:name="Transform Message" doc:id="912f9770-d121-4692-8f03-fb025736c606" >
+			<ee:message >
+				<ee:set-payload resource="dw_file.dwl" />
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="af2fa1f8-1cdc-4040-ba3a-2f1b64baef6d" />
+	</flow>
+</mule>
