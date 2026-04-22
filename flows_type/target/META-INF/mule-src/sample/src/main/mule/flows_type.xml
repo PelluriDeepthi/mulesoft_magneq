@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c6cd0db4-103d-40b9-8c85-c641e26119eb" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_config" doc:name="HTTP_Request_config" doc:id="3125c2fa-21ce-4388-81fa-cb1a2e821c51" >
+		<http:request-connection/>
+	</http:request-config>
+	<http:request-config name="HTTP_Request_config1" doc:name="HTTP Request config" doc:id="b9bb3ac6-6113-43af-a874-3c6a350f0ff3" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<flow name="sampleFlow" doc:id="c5dd1130-9773-44a9-b3ab-503ebd33cdfb" >
+		<http:listener doc:name="Listener" doc:id="d66a8a05-1f5a-47dd-ae92-8ece25f9c08d" config-ref="HTTP_Listener_config" path="/sample"/>
+		<logger level="INFO" doc:name="Logger" doc:id="9a818e51-2f25-4f32-acbb-9e4794aab34a" message="sample flow started"/>
+		<ee:transform doc:name="Transform Message" doc:id="e9d5b38b-3914-40fe-ac52-9623dd9dc44c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "welcome to Mulesoft"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="0ab48d62-2cf4-4272-a81c-e85ec566b420" variableName="target1"/>
+		<logger level="INFO" doc:name="Logger" doc:id="cc1a2914-037a-4a81-9441-12cf9104b556" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="59411c90-454a-4fa7-a10d-c36b9331fa7e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "welcome to magneq"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="81fcbd90-5edb-420f-bd84-b2745faab80f" name="sampleSub_Flow" />
+		<ee:transform doc:name="Transform Message" doc:id="9c9caf5c-ad64-476e-adea-cc372beaf509" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="4241ecd6-e687-4308-a46f-66a3db0e2599" message="sample flow ended" />
+	</flow>
+	<sub-flow name="sampleSub_Flow" doc:id="8a123ff3-66ac-47d4-81e1-f355d3e07070" >
+		<logger level="INFO" doc:name="Logger" doc:id="e764136f-ed92-43aa-a68b-9d75e678046e" message="samplesub_flow started"/>
+		<flow-ref doc:name="Flow Reference" doc:id="e165b2d8-351e-4276-abe0-250e3408051c" name="sampleFlow1"/>
+		<logger level="INFO" doc:name="Logger" doc:id="5917fcb9-71d6-42a1-a7c5-a18f6b97ee05" message="ssampleub_flow ended"/>
+	</sub-flow>
+	<flow name="sampleFlow1" doc:id="51520794-25be-4bf5-9c41-d7be2393cf34" >
+		<logger level="INFO" doc:name="Logger" doc:id="2dc88785-6a8e-4e87-8bd3-ac43784f8a46" message="sampleFlow1 started"/>
+		<http:request doc:name="Request" doc:id="1ef102d7-e600-4146-b558-8f65474aa1bf" config-ref="HTTP_Request_config1" path="/api/flights"/>
+		<logger level="INFO" doc:name="Logger" doc:id="36ecd279-3b40-479d-b831-655a58759398" message="sampleFlow1 ended"/>
+	</flow>
+</mule>
