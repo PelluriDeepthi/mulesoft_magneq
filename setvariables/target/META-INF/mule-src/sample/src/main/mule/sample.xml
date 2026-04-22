@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c4addf4f-f9e2-42c9-9c37-8cdc99d0d3d3" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<flow name="sampleFlow" doc:id="01f3a297-7ca5-4a16-bdec-597df474af2f" >
+		<http:listener doc:name="Listener" doc:id="ed005278-30a9-4d10-aeaa-933edeb7773d" config-ref="HTTP_Listener_config" path="/sample"/>
+		<logger level="INFO" doc:name="Start Logger" doc:id="c767c18a-a18a-4913-8363-b084555442aa" message="sample flow started"/>
+		<ee:transform doc:name="Transform Message" doc:id="b04973a1-5990-4334-a7bb-3f17e4efd54e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "hello Mulesoft"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="04aac0d4-6530-4ef0-92ae-fc3030e78bf3" variableName="firstOutput"/>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="828abe06-cda0-4bfb-a504-c95b86962426" variableName="secondOutput" />
+		<ee:transform doc:name="Transform Message" doc:id="0bba40e3-52bc-4526-bf9c-5e294c9d6f13" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "welcome to magneq software"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="127032b3-a381-411c-bf4c-85e6dd0bd9ad" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.secondOutput]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Logger" doc:id="a80d76a3-c2a6-4fcc-8791-bbd35edfe3a5" message="sample flow ended"/>
+	</flow>
+</mule>
