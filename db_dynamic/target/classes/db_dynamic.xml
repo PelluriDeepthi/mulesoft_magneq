@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="157c6b8f-f993-4602-8063-c047d6a5824a" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="2b22be26-cb69-433f-9da4-921a87d68214" >
+		<db:my-sql-connection host="iltdb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
+	</db:config>
+	<flow name="db_dynamicFlow" doc:id="ec96ff2c-9f41-43a8-9497-767728f69c7e" >
+		<http:listener doc:name="Listener" doc:id="5d65d7fb-77e9-4e6b-93f6-995c08130afe" config-ref="HTTP_Listener_config" path="/dynamic"/>
+		<logger level="INFO" doc:name="Logger" doc:id="12e8ebca-5143-40f3-b8c7-1a85d9585dca" />
+		<db:select doc:id="695ea239-e2ba-4457-b0a2-798ea6e4eac0" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from accounts where city= :city and state= :state]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{city: attributes.queryParams.city,
+state: attributes.queryParams.state}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="a7771c62-8be3-40d8-8f0f-76cb8a1a8a31" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="59964830-0acc-4947-b43a-23eccf3efc9d" />
+	</flow>
+</mule>
