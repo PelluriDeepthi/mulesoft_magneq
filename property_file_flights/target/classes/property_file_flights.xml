@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="e419306e-c888-4554-9e68-a075e566af0a" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_config" doc:name="HTTP Request config" doc:id="b9c08f79-c045-4278-9415-f6a75cc13f5e" >
+		<http:request-connection host="${flights.host}" port="${flights.port}"/>
+	</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="925db61b-480a-449d-9e4d-59d713edada5" file="C:\mule\property_file\external-dev-flights.properties" />
+	<flow name="property_file_flightsFlow" doc:id="b7289a58-accb-4aae-8f70-a8ecadcb3102" >
+		<http:listener doc:name="Listener" doc:id="c9b08ffd-d359-45cc-a024-8e8a574c3c8e" config-ref="HTTP_Listener_config" path="/flightsprop"/>
+		<logger level="INFO" doc:name="Logger" doc:id="764ceb54-4a99-45c6-bee7-1602af257fe7" />
+		<http:request doc:name="Request" doc:id="25c82c56-ff0d-4eda-8dbf-b14d6032f45b" config-ref="HTTP_Request_config" path="${flights.path}"/>
+		<ee:transform doc:name="Transform Message" doc:id="63592293-a598-4a87-89aa-354c2505bef5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="bacce218-b992-4f08-bdc3-9a5aa8cc027d" />
+	</flow>
+</mule>

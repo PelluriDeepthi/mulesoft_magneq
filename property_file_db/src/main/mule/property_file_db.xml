@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b44d8d8e-9a61-44b9-9e1e-021aa9c6c289" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="04d7b969-78b7-4dc4-b899-a88e31b8bef1" >
+		<db:my-sql-connection host="${training.database.host}" port="${training.database.port}" user="${training.database.username}" password="${training.database.password}" database="${training.database.databasename}" />
+	</db:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="24985ed7-0342-40f3-8a9f-0eb528133694" file="C:\mule\property_file\external-dev.properties" />
+	<flow name="property_fileFlow" doc:id="5dcdb5ae-e6a9-43cc-a1af-6fa3617eacb6" >
+		<http:listener doc:name="Listener" doc:id="65cdbbdf-1ab9-42ec-8a39-babc7e88004c" config-ref="HTTP_Listener_config" path="/file"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7183cd05-1118-4eb6-b201-c4f57b419513" />
+		<db:select doc:name="Select" doc:id="c1318e61-71c9-4056-8531-b087ef167442" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from accounts where name="Hall Woodard"]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="cbbdc75e-7108-471b-a76c-9cd44cb1aba8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="04345336-5b7a-4a54-ab2f-d3403681aab0" />
+	</flow>
+</mule>
