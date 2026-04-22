@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:request-config name="HTTP_Request_config" doc:name="HTTP Request config" doc:id="06607cbc-eefc-46c6-a4c4-3bdfe27a2d6b" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<flow name="schedulerFlow" doc:id="4756c26e-3bc5-4e8d-adf1-31e111ba7a94" >
+		<scheduler doc:name="Scheduler" doc:id="32192246-9250-4ee6-9bc1-15a6ba6fafd8" >
+			<scheduling-strategy >
+				<cron expression="0 0/5 * 1/1 * ? *"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="c682d70b-cc92-4c12-b262-ea2e2ac3fbed" message='#["application started at -" ++ now()]'/>
+		<http:request doc:name="Request" doc:id="747521a2-e601-48a1-8671-542aced47b63" config-ref="HTTP_Request_config" path="/api/flights"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e6bb3e26-cc09-4a14-9b40-93402c8dbc1d" message='#["application ended at -" ++ now()]'/>
+	</flow>
+</mule>
