@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="449960fc-d365-43ca-af91-1264b828ad03" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_config" doc:name="HTTP Request config" doc:id="86bcaa09-439b-4a1d-b079-c5ae8e25b8b0" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="59259f5a-379a-4076-90cc-7e45587a1f3c" >
+		<db:my-sql-connection host="iltdb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
+	</db:config>
+	<flow name="scheduler_projectFlow" doc:id="66537a84-88b7-4995-8878-0262ce4a052f" >
+		<http:listener doc:name="Listener" doc:id="6a57dde2-8e29-42f1-b8c4-50f245d1689a" config-ref="HTTP_Listener_config" path="/help"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e46e4b8d-6a05-4c19-8e5a-6f900f0f336f" message='#["started-" ++ now()]'/>
+		<http:request doc:name="Request" doc:id="b3f5d87b-c9b1-4455-b5ed-01650882df62" config-ref="HTTP_Request_config" path="/api/flights"/>
+		<ee:transform doc:name="Transform Message" doc:id="d806401f-bba8-4105-a10a-310bdcb6e6d0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables />
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="84b2a9ac-13f2-4213-950f-3265760c4fb5" name="scheduler_projectFlow1"/>
+		<ee:transform doc:name="Transform Message" doc:id="5f267d3c-031e-4020-9271-33838e48557d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="be71de89-a7c3-441e-8433-92c3b793354a" message='#["ended-" ++ now()]'/>
+	</flow>
+	<flow name="scheduler_projectFlow1" doc:id="7ca19cad-aa86-429c-a191-37f9a0aa5878" >
+		<scheduler doc:name="Scheduler" doc:id="aed770ea-e32a-41bf-9781-efebae87cfee" >
+			<scheduling-strategy >
+				<cron expression="0 0 9 ? * MON *"/>
+			</scheduling-strategy>
+		</scheduler>
+		<db:select doc:name="Select" doc:id="8739e508-e0e0-467c-9628-f1ad9d7bb896" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from accounts]]></db:sql>
+		</db:select>
+	</flow>
+</mule>
