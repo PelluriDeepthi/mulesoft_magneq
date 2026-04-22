@@ -1,0 +1,7 @@
+#database configurations:
+database:
+  host: "iltdb.learn.mulesoft.com"
+  port: "3306"
+  username: "mule"
+  password: "mule"
+  dbname: "training"
