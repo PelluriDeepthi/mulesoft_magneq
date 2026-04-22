@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<flow name="scheduler_tmFlow" doc:id="13c4f92b-6a82-45d9-8edd-0d2bbc1c105b" >
+		<scheduler doc:name="Scheduler" doc:id="7a0c9214-9711-4c70-b9dc-5ae16a4af2e3" >
+			<scheduling-strategy >
+				<fixed-frequency startDelay="1" timeUnit="MINUTES"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="cdc61ede-26ae-4dfc-a9aa-d83fa304e30d" message='#["started at- " ++ now()]'/>
+		<file:read doc:id="463f5d50-b520-459b-8719-9f587d328137" path="C:\AnypointStudio\mule\scheduler_file\file_read.txt"/>
+		<ee:transform doc:name="Transform Message" doc:id="81c32b23-c4b1-4de0-bd01-3690982c6c52" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="c4fa87e3-3c7a-4541-9504-ccfeae958cbf" path="C:\AnypointStudio\mule\scheduler_file\file_write.txt"/>
+		<logger level="INFO" doc:name="Logger" doc:id="8dc38652-1446-4999-89c6-8b98e28c5f7d" message='#["ended at- " ++ now()]'/>
+	</flow>
+</mule>
