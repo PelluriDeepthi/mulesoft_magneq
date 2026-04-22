@@ -1,0 +1,7 @@
+#database properties
+accounts:
+  datbase:
+    host: "iltdb.learn.mulesoft.com"
+    port: 3306
+    user: "mule"
+    dbname: "training"

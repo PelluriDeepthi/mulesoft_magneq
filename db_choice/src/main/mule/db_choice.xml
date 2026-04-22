@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="1d7d6b37-5204-42fd-aa8c-7782e8ca9b3b" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="609dfb58-378b-4a29-bde1-f06127495dad" >
+		<db:my-sql-connection host="${accounts.datbase.host}" port="${accounts.datbase.port}" user="${accounts.datbase.user}" password="${secure::accounts.datbase.password}" database="${accounts.datbase.dbname}" />
+	</db:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="e6785085-e222-4bea-8e4c-8c6f7b013521" file="C:\AnypointStudio\mule\property_file\database-poc\external-dev.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="53dc52d2-111b-4c52-9b8c-c40091e34be2" file="C:\AnypointStudio\mule\property_file\database-poc\external-dev-secure.yaml" key="a1b2c3d4e5f6-dev" />
+	<flow name="database-pocFlow" doc:id="38d140c5-700b-41f9-9543-b893a0bd8b8c" >
+		<scheduler doc:name="Scheduler" doc:id="cffb7f13-1a0c-42d3-8005-ba839249358b">
+			<scheduling-strategy>
+				<fixed-frequency frequency="2" timeUnit="MINUTES" />
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="d40f70e6-3a5d-452e-9c7d-6eb410e3e3ee" />
+		<db:select doc:name="Select" doc:id="18129211-73ce-436c-91ae-90c73c366d38" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from accounts where city IN('', '')]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="ee5fbe70-cac4-4606-a323-d543045fdd84">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "accountID": 1,
+    "name": "Brock Hoover",
+    "street": "P.O. Box 720, 2108 Feugiat. Road",
+    "city": "Fresno",
+    "state": "TN",
+    "postal": "90545",
+    "country": "United States"
+  }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="cad9b3e9-16f0-416e-a14d-894f6ce31802">
+			<when expression='#[payload.city == "Memphis"]'>
+				<ee:transform doc:name="Transform Message" doc:id="64ad6da7-3eed-40cd-8bd1-a1a2478f416d">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[payload.city == "Fresno"]'>
+					<ee:transform doc:name="Transform Message" doc:id="4771b3c0-cea5-4955-bded-5e0f72fea81b">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+				</when>
+				<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="b087f14b-3a80-4146-b874-d6b2ab3545b0" message="default message" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="4b253775-5ca6-4096-9b56-8f2e80a7e07c" message="#[payload]"/>
+	</flow>
+</mule>
