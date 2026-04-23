@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
+	<http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="421a4b83-c509-4d2f-9dff-416125bc540c" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<flow name="database-pocFlow" doc:id="38d140c5-700b-41f9-9543-b893a0bd8b8c" >
+		<http:listener doc:name="Listener" doc:id="4470f0ae-11f5-43e2-80c7-1e923948e9f5" config-ref="HTTP_Listener_config1" path="/choice"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d40f70e6-3a5d-452e-9c7d-6eb410e3e3ee" />
+		<foreach doc:name="For Each" doc:id="f486181b-63e7-4c3d-afd3-3ad8722080c9" >
+			<choice doc:name="Choice" doc:id="cad9b3e9-16f0-416e-a14d-894f6ce31802">
+			<when expression='#[payload.requestType == "Instagram"]'>
+				<ee:transform doc:name="Transform Message" doc:id="64ad6da7-3eed-40cd-8bd1-a1a2478f416d">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "User requested for Instagram access"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+				<when expression='#[payload.requestType == "Facebook"]'>
+				<ee:transform doc:name="Transform Message" doc:id="14d2ac09-3e56-403b-b8fb-262b8d25d03a">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "User requested for Facebook access"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Transform Message" doc:id="ceee40b8-d8d4-4f8e-942f-1ab408740366">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "User selected neither Instagram or Facebook"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="4b253775-5ca6-4096-9b56-8f2e80a7e07c" message="#[payload]"/>
+	</flow>
+</mule>
