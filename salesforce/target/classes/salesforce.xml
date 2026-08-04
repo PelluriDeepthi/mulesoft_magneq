@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b02ff75e-f4da-435e-9539-62ad96a39dda" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config2" doc:name="Salesforce Config" doc:id="e2977358-57fa-4ca7-8e12-2348042a8478" >
+		<salesforce:basic-connection username="pvaishnavideepthisharma_goerbuitzwl2paiicw8ow40@gmail.com" password="Vaishu@61" securityToken="s6Di57BwWZJJzp86hxsfTTLT" url="https://login.salesforce.com/services/Soap/u/64.0" />
+	</salesforce:sfdc-config>
+	<flow name="salesforceFlow" doc:id="c600cc91-1774-4d80-a829-838d9b53ed63" >
+		<http:listener doc:name="Listener" doc:id="c40814db-fd80-403b-9b82-809e0bfd5f5e" config-ref="HTTP_Listener_config" path="/sf"/>
+		<logger level="INFO" doc:name="Logger" doc:id="8e9a905e-83be-4ae9-9902-ab68cdfbec5e" />
+		<ee:transform doc:name="Transform Message" doc:id="67dbf46c-13f5-457e-b636-51d87ed09577" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	"name": payload.name
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create doc:name="Create" doc:id="4c379f0e-d507-42bc-ad0a-583a142250dc" config-ref="Salesforce_Config2" type="Account"/>
+		<logger level="INFO" doc:name="Logger" doc:id="ba501975-28d5-43c5-b4a9-c32d7077b93d" />
+	</flow>
+</mule>
