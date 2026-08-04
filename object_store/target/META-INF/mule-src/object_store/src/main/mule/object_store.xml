@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c00eb2ea-8178-496c-bec2-82fd3f796576" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="027cb283-5b7b-40c5-9433-757207e54635" entryTtl="10" entryTtlUnit="DAYS" config-ref="ObjectStore_Config"/>
+	<os:config name="ObjectStore_Config" doc:name="ObjectStore Config" doc:id="ac8cb8bb-f492-405c-85e0-0d09421205b7" >
+		<os:connection >
+			<reconnection failsDeployment="true" >
+				<reconnect />
+			</reconnection>
+		</os:connection>
+	</os:config>
+	<flow name="object_storeFlow" doc:id="c5bdc7eb-d347-426f-8c1e-002b36f1dd7a" >
+		<http:listener doc:name="Listener" doc:id="1a8ee554-2181-466a-8c2c-f94636a501ee" config-ref="HTTP_Listener_config" path="/object"/>
+		<logger level="INFO" doc:name="Logger" doc:id="a0340c1b-a70d-4915-ad97-22074ac0d9d8" message="main flow started"/>
+		<ee:transform doc:name="Transform Message" doc:id="9adb4344-a9ac-48f7-be10-0a9710fc40e5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"this is object store"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<os:store doc:id="7d7bcc1c-c5dd-4bd4-9c7a-b53555663154" key="inputpayload" objectStore="Object_store"/>
+		<flow-ref doc:name="Flow Reference" doc:id="b00f2192-a904-4da3-b3c7-69ab19a0ca96" name="object_storeSub_Flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7e9b2045-cf8e-44a4-bc37-5c31721b8e43" message="main flow ended"/>
+	</flow>
+	<sub-flow name="object_storeSub_Flow" doc:id="69c12c01-7645-42e6-ab72-2f7c12d142a6" >
+		<logger level="INFO" doc:name="Logger" doc:id="f77e5df8-630c-4fd5-ba28-d61ba15c665c" message="subflow started"/>
+		<os:retrieve doc:name="Retrieve" doc:id="a441f6a9-7bdd-496f-a8c2-ea068fde346a" key="inputpayload" objectStore="Object_store"/>
+		<ee:transform doc:name="Transform Message" doc:id="62213f57-b67e-4138-b623-a35b066a09bf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="69e42549-960e-4100-ac48-a567ce1393f9" message="subflow ended"/>
+	</sub-flow>
+</mule>
