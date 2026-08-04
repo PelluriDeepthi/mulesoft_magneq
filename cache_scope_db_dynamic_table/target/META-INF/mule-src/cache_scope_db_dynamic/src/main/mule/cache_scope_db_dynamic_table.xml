@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="4d10d509-3064-4711-aa02-60e46d224fbb" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="6abbb146-44c8-41cc-b069-a221e0c567c8" >
+		<db:my-sql-connection host="iltdb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
+	</db:config>
+	<flow name="cache_scope_db_dynamicFlow" doc:id="fced7563-7358-450a-ab76-922401299668" >
+		<http:listener doc:name="Listener" doc:id="4b5ff2eb-4c36-456c-aa57-e975565cec4f" config-ref="HTTP_Listener_config" path="/cachedyn"/>
+		<logger level="INFO" doc:name="Logger" doc:id="afc5df3c-aee9-401e-b2f9-ebbd903d8f27" />
+		<ee:transform doc:name="Transform Message" doc:id="e2b00013-bfa8-43e8-9835-06f2f5eff1d4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"select * from" ++ " " ++ attributes.queryParams.table]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:cache doc:name="Cache" doc:id="316a82fa-4324-4207-9ea4-cadbb6c8d865" >
+			<db:select doc:name="Select" doc:id="ab4402c5-5984-42e4-a4c1-bc3e6b0bc198" config-ref="Database_Config">
+			<db:sql><![CDATA[#[payload]]]></db:sql>
+		</db:select>
+		</ee:cache>
+		<ee:transform doc:name="Transform Message" doc:id="738fa4d0-6ac5-4394-9399-0cbc71972e51" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="bea8dc2f-e651-4325-b52c-e29c610826f6" />
+	</flow>
+</mule>
