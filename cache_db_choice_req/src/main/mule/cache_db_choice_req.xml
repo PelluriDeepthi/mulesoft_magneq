@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="25b71c9a-3b74-4cf6-b34e-c0c296f360f7" >
+		<db:my-sql-connection host="iltdb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
+	</db:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="f655c79e-6421-438b-bab7-f31520d9ffe6" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_config" doc:name="HTTP Request config" doc:id="ebe4c1ac-1626-482a-8572-a9dbaeffc06d" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" >
+			<http:authentication >
+				<http:basic-authentication username="5a1372f99b75409ab36291b4b83c9723" password="19d722b03B444BeA8C65f3baD1a81066" />
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+	<flow name="cache_db_choice_reqFlow" doc:id="d3805341-3d16-4336-bf1d-1f27e222cf05" >
+		<http:listener doc:name="Listener" doc:id="12c5611d-f5f5-44a0-9b2b-e126b726eaf7" config-ref="HTTP_Listener_config" path="/cachecho"/>
+		<set-variable value='"2026-05-18T06:30:12.825947Z"' doc:name="Set Variable" doc:id="e525806d-b42d-487e-93c2-0947c27f7453" variableName="lastFetchTokenTime"/>
+		<ee:transform doc:name="Transform Message" doc:id="c830ac33-84bb-44f8-9d2f-af6ec222b1dd" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="timeStamp" ><![CDATA[%dw 2.0
+output application/json
+---
+now() - vars.lastFetchTokenTime]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="bb515f50-b27f-4822-9c30-73763a7fe53f" >
+			<when expression="#[payload]">
+				<http:request doc:name="Request for Ping Federate" doc:id="c20318b9-9195-4967-8bec-6c1c90dcca3e" config-ref="HTTP_Request_config" path="/api/flights"/>
+			</when>
+			<otherwise>
+				<logger level="INFO" doc:name="Logger" doc:id="b053389f-df0c-4774-a8d1-e3a96dbf048c" message="#[payload]"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="6b37159a-3b34-4078-9c2d-c1088447458b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+"select * from" ++ " " ++ attributes.queryParams.table]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:cache doc:name="Cache" doc:id="715b39df-10ae-4c1f-9f1c-8e233b81b39b" >
+			<db:select doc:id="d7e50553-49f1-4d5e-9162-65402cb4e383" config-ref="Database_Config">
+			<db:sql><![CDATA[#[payload]]]></db:sql>
+		</db:select>
+		</ee:cache>
+		<ee:transform doc:name="Transform Message" doc:id="4433ed1a-3ed0-4e5e-a37c-ae4d01a2d7a6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="50319e74-d311-4aaf-b4c5-5008cfb0f602" />
+	</flow>
+</mule>
