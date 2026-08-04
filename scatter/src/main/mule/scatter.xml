@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="f0770d23-f783-4dea-badc-22b17c54c4b2" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_config" doc:name="HTTP Request config" doc:id="2c8a6f0f-adf4-4995-8471-4a28729b8f98" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_config1" doc:name="HTTP Request config" doc:id="1cd59e06-aa7c-42ba-a88c-01267aa92262" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_config2" doc:name="HTTP Request config" doc:id="683fc8d8-1c22-4944-b7af-faa4a06edb9e" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="43a3d2b3-e12d-4266-8da1-105c16e2082c" >
+		<db:my-sql-connection host="iltdb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
+	</db:config>
+	<api-gateway:autodiscovery apiId="20884994" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="31928c41-ef56-47d9-9de9-5ef14e892900" flowRef="scatterFlow" />
+	<flow name="scatterFlow" doc:id="821055b5-dc5c-47d3-91bb-0e8ad7ee4974" >
+		<http:listener doc:name="Listener" doc:id="180dec0a-ed3e-4eb3-b881-cd0e539b7c77" config-ref="HTTP_Listener_config" path="/scat"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="f5658bf8-a5da-4a5a-a984-1a373a0e340c" >
+			<route >
+				<http:request doc:name="Request" doc:id="6805522f-ebc9-440c-8aaf-af473e59c2c8" config-ref="HTTP_Request_config" path="/api/flights" />
+			</route>
+			<route >
+				<db:select doc:name="Select" doc:id="bff93011-2a57-44a5-8d50-78fa3f835e99" config-ref="Database_Config">
+					<db:sql ><![CDATA[select * from accounts]]></db:sql>
+				</db:select>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="4ba3eedb-f692-4c74-a7dc-d54d4ac7ed1b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="357d8050-804f-4105-b944-17eff9bbfd01" message="#[payload]"/>
+	</flow>
+</mule>
