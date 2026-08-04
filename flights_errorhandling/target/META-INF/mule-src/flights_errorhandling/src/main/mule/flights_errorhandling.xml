@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd"></mule>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="2ce8935a-8162-44e9-a419-af880fc6155f" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<flow name="flights_errorhandlingFlow" doc:id="9e2b4a51-e1c2-49a7-a67a-df0431e3e742" >
+		<http:listener doc:name="Listener" doc:id="059cfdd4-1fe1-4859-8b48-e672d29bedb2" config-ref="HTTP_Listener_config" path="/test"/>
+		<logger level="INFO" doc:name="Logger" doc:id="913c0c1e-574f-4f9d-a2f2-b79badc69849" />
+		<ee:transform doc:name="Transform Message" doc:id="ecd3c469-7b9e-4cd2-b08e-e219964de2b8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"hello"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+
+</mule>
