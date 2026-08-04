@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="bfa98f5d-8bfc-41b8-8a19-6924669f3532" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="9f875fba-8386-4487-b346-0868a1ba2336" >
+		<db:my-sql-connection host="iltdb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
+	</db:config>
+	<flow name="async_scopeFlow" doc:id="76bea433-9204-4e65-9567-5c59b0723913" >
+		<http:listener doc:name="Listener" doc:id="79825b85-48bf-48e6-bf0f-a731571fb6f2" config-ref="HTTP_Listener_config" path="/async"/>
+		<logger level="INFO" doc:name="Logger" doc:id="cb615424-aee0-4e9c-8754-9772d2987c30" message="main flow started"/>
+		<ee:transform doc:name="Transform Message" doc:id="3e61a9ec-bb3e-4a6a-951e-007ba976df7f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+"select * from" ++ " " ++ attributes.queryParams.table]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<async doc:name="Async" doc:id="e7fb77ac-a30d-4093-a5ec-291c7ad53b03" maxConcurrency="1">
+			<flow-ref doc:name="Flow Reference" doc:id="23cbe1e4-10a5-4902-be28-f76d54f2be02" name="async_scopeSub_Flow"/>
+		</async>
+		<ee:cache doc:name="Cache" doc:id="35b08b32-64e4-4574-806b-7acf80107da4" >
+			<db:select doc:name="Select" doc:id="4e043f67-6954-44fc-a45d-5381c4a85835" config-ref="Database_Config">
+				<db:sql ><![CDATA[#[payload]]]></db:sql>
+			</db:select>
+		</ee:cache>
+		<ee:transform doc:name="Transform Message" doc:id="c4b8425d-cc34-470f-b3bc-e19a41e46e0a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="12876b46-d264-4d84-b1a3-ae92ebaf2915" message="main flow ended"/>
+	</flow>
+	<sub-flow name="async_scopeSub_Flow" doc:id="9dfab2f6-b949-4d40-ac93-ef936560d81e" >
+		<logger level="INFO" doc:name="Logger" doc:id="89fd829b-35d2-4179-b816-55929d849132" message="subflow started"/>
+		<ee:transform doc:name="Transform Message" doc:id="83c17ebf-acaa-496d-8f0d-2ecddf50c179" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="5621385f-3a2c-4730-b9d1-6b374a839e5e" message="subflow ended"/>
+	</sub-flow>
+</mule>
