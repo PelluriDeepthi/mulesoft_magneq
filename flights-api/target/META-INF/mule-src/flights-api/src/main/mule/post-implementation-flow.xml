@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:request-config name="Flights_HTTP_Request_config" doc:name="HTTP Request config" doc:id="0b3d40aa-afeb-45ab-bba3-46612858f600" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<sub-flow name="post-implementation-flowSub_Flow" doc:id="c433a5d3-663e-4eb8-9edf-ea4de6bf041e" >
+		<logger level="INFO" doc:name="Logger" doc:id="26c9e1a7-6f49-40d6-9de0-c50382bdccb0" message="post  implementation flow started"/>
+		<http:request doc:name="Request" doc:id="a32088fa-1a89-4899-9621-8c16c8c043f1" method="POST" config-ref="Flights_HTTP_Request_config" path="/api/flight"/>
+		<logger level="INFO" doc:name="Logger" doc:id="b0accbe5-dd66-4dda-b3cd-02e46a7a3d1e" message="post  implementation flow ended"/>
+	</sub-flow>
+</mule>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<sub-flow name="get-implementation-flowSub_Flow" doc:id="59533890-36ad-4bda-90a9-7bf9be25bead" >
+		<logger level="INFO" doc:name="Logger" doc:id="4c243525-5dca-45d2-b3b0-6cbf53d45d67" message="get implementation flow started"/>
+		<http:request doc:name="Request" doc:id="9105f117-a3df-452a-9b40-ead9ce838484" config-ref="Flights_HTTP_Request_config" path="/api/flights"/>
+		<logger level="INFO" doc:name="Logger" doc:id="5d281a5b-7c3d-4dbd-8beb-c31432c9564b" message="get implementation flow  ended"/>
+	</sub-flow>
+</mule>
