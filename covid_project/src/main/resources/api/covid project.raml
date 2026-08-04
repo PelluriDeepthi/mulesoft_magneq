@@ -1,0 +1,267 @@
+#%RAML 1.0
+title: COVID-19 Reporting API
+version: v1
+baseUri: http://localhost:8081/api
+mediaType: application/json
+description: |
+  COVID-19 Case Management API for AHO (Area Health Office) to report cases to WHO.
+  Handles positive cases, recovery, death, and vaccination tracking.
+
+#-----------------------------------------
+# DATA TYPES
+#-----------------------------------------
+types:
+  CovidCase:
+    type: object
+    properties:
+      caseId:
+        type: string
+        example: "C1001"
+      patientName:
+        type: string
+        example: "John Doe"
+      country:
+        type: string
+        example: "India"
+      age:
+        type: integer
+        minimum: 0
+        maximum: 120
+        example: 35
+      status:
+        type: string
+        enum: [POSITIVE, RECOVERED, DEATH, INVALID]
+        example: "POSITIVE"
+
+  CovidCaseResponse:
+    type: object
+    properties:
+      caseId: string
+      patientName: string
+      country: string
+      age: integer
+      status: string
+      registeredDate: string
+
+  StatusUpdate:
+    type: object
+    properties:
+      status:
+        type: string
+        enum: [RECOVERED, DEATH]
+        example: "RECOVERED"
+
+  Vaccination:
+    type: object
+    properties:
+      vaccineId:
+        type: string
+        example: "V1001"
+      patientId:
+        type: string
+        example: "C1001"
+      vaccineName:
+        type: string
+        example: "Covishield"
+      doseNumber:
+        type: integer
+        minimum: 1
+        maximum: 3
+        example: 1
+
+  ApiResponse:
+    type: object
+    properties:
+      status:
+        type: string
+        example: "SUCCESS"
+      message:
+        type: string
+        example: "Operation completed successfully"
+
+  ErrorResponse:
+    type: object
+    properties:
+      errorCode: string
+      errorMessage: string
+
+#-----------------------------------------
+# RESOURCES
+#-----------------------------------------
+
+/cases:
+  displayName: COVID Cases
+  description: Manage COVID-19 positive cases
+  
+  post:
+    description: Register a new COVID positive case to AHO and report to WHO
+    body:
+      application/json:
+        type: CovidCase
+        example:
+          caseId: "C1001"
+          patientName: "John Doe"
+          country: "India"
+          age: 35
+          status: "POSITIVE"
+    responses:
+      201:
+        description: Case registered successfully
+        body:
+          application/json:
+            type: ApiResponse
+            example:
+              status: "SUCCESS"
+              message: "Case registered and reported to WHO"
+      400:
+        body:
+          application/json:
+            type: ErrorResponse
+      500:
+        body:
+          application/json:
+            type: ErrorResponse
+
+  get:
+    description: Fetch all COVID cases, optionally filter by country
+    queryParameters:
+      country:
+        type: string
+        required: false
+        example: "India"
+      status:
+        type: string
+        required: false
+        enum: [POSITIVE, RECOVERED, DEATH, INVALID]
+    responses:
+      200:
+        body:
+          application/json:
+            type: CovidCaseResponse[]
+            example:
+              - caseId: "C1001"
+                patientName: "John Doe"
+                country: "India"
+                age: 35
+                status: "POSITIVE"
+                registeredDate: "2024-01-15 10:30:00"
+
+  /{caseId}:
+    uriParameters:
+      caseId:
+        type: string
+        example: "C1001"
+    
+    put:
+      description: Update case status to RECOVERED or DEATH
+      body:
+        application/json:
+          type: StatusUpdate
+          example:
+            status: "RECOVERED"
+      responses:
+        200:
+          body:
+            application/json:
+              type: ApiResponse
+              example:
+                status: "SUCCESS"
+                message: "Case status updated to RECOVERED"
+        404:
+          body:
+            application/json:
+              type: ErrorResponse
+
+    get:
+      description: Get details of a specific case
+      responses:
+        200:
+          body:
+            application/json:
+              type: CovidCaseResponse
+        404:
+          body:
+            application/json:
+              type: ErrorResponse
+
+/vaccinations:
+  displayName: Vaccinations
+  description: Manage vaccination records
+  
+  post:
+    description: Register a vaccinated case to AHO and report to WHO
+    body:
+      application/json:
+        type: Vaccination
+        example:
+          vaccineId: "V1001"
+          patientId: "C1001"
+          vaccineName: "Covishield"
+          doseNumber: 1
+    responses:
+      201:
+        body:
+          application/json:
+            type: ApiResponse
+            example:
+              status: "SUCCESS"
+              message: "Vaccination registered and reported to WHO"
+      400:
+        body:
+          application/json:
+            type: ErrorResponse
+
+  get:
+    description: Get all vaccination records
+    responses:
+      200:
+        body:
+          application/json:
+            type: Vaccination[]
+
+/monitoring:
+  displayName: Monitoring
+  description: Monitoring endpoints for health analytics
+  
+  /post-vaccination:
+    get:
+      description: Fetch positive COVID cases that occurred AFTER vaccination
+      responses:
+        200:
+          body:
+            application/json:
+              type: CovidCaseResponse[]
+              example:
+                - caseId: "C1001"
+                  patientName: "John Doe"
+                  country: "India"
+                  age: 35
+                  status: "POSITIVE"
+                  registeredDate: "2024-02-20 10:30:00"
+
+  /country-report:
+    get:
+      description: Get aggregated COVID report by country
+      queryParameters:
+        country:
+          type: string
+          required: true
+          example: "India"
+      responses:
+        200:
+          body:
+            application/json:
+              properties:
+                country: string
+                totalCases: integer
+                positiveCases: integer
+                recoveredCases: integer
+                deathCases: integer
+                invalidCases: integer
+              example:
+                country: "India"
+                totalCases: 100
+                positiveCases: 40
+                recoveredCases: 50
+                deathCases: 5
+                invalidCases: 5

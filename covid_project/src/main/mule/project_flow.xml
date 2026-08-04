@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="6f90b59b-3cec-4632-bd5f-45618c8a0e6a" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="60030a37-9f18-4fb5-86ec-7cea252f5aa6" >
+		<db:my-sql-connection host="192.168.1.25" port="3306" user="frienduser" password="Friend@123" database="pradeep_management" />
+	</db:config>
+	<flow name="project_flowFlow" doc:id="1dac8c7f-4563-4984-a6bd-3cf1ebdad6fd" >
+		<http:listener doc:name="Listener" doc:id="13519ab4-aa72-4ba6-83f2-736c0ec544ef" config-ref="HTTP_Listener_config" path="/covid"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2cb66bcc-81e9-4036-b635-9ca28b96f926" message="flow started"/>
+		<db:select doc:name="Select" doc:id="d255d96c-33f1-47e9-88d2-d9091f2d0ac8" config-ref="Database_Config" >
+			<db:sql ><![CDATA[select * from covid_cases]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="4ef684cf-3628-4a15-a772-99a55d9a7256">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="4a854f8e-b0ed-43e2-95f7-b950e2c78850" >
+			<when expression="#[payload]">
+				<logger level="INFO" doc:name="Logger" doc:id="0ef698a0-f858-44f7-97b8-155c3347840d" />
+				<db:update doc:name="Update" doc:id="fbffca73-8f2c-4962-ac31-befaa1e9a4aa" />
+				<logger level="INFO" doc:name="Logger" doc:id="b1e5afbc-4382-4773-847c-07cb568f9aa8" />
+				<http:request doc:name="Request" doc:id="285bb4d5-d749-49fe-9b4f-391bd58d9ea4" />
+				<logger level="INFO" doc:name="Logger" doc:id="d56f026d-9748-4bea-a8e8-23a1d31b36d4" />
+			</when>
+			<when >
+				<logger level="INFO" doc:name="Logger" doc:id="453478f3-3dd4-43b3-8a40-37cd0d8edc59" />
+				<db:update doc:name="Update" doc:id="8dcb5ef7-e48a-41a6-b619-34c1a717d067" />
+				<logger level="INFO" doc:name="Logger" doc:id="718d0d85-a1a6-46d4-a84f-9f26115bfda8" />
+			</when>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="a521fc24-7d6c-49cd-b7d2-69b146fa2b2b" message="flow ended"/>
+	</flow>
+</mule>
