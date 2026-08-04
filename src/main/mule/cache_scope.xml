@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d7dd0c7a-a906-4767-ad72-8b94c8bb04e0" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="4a06a99f-9eeb-460f-b3d2-4c55029996a3" >
+		<db:my-sql-connection host="iltdb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
+	</db:config>
+	<flow name="cache_scopeFlow" doc:id="3b8980b7-e537-4682-8f16-62ed7725733c" >
+		<http:listener doc:name="Listener" doc:id="481b07cb-f30d-463d-b42a-306b0e001c99" config-ref="HTTP_Listener_config" path="/cache"/>
+		<logger level="INFO" doc:name="Logger" doc:id="8172aac4-8f82-4a33-b718-a733c313f0a4" message="flow started"/>
+		<ee:cache doc:name="Cache" doc:id="9ccb69e3-b08c-4a16-a8c8-00835198c1de" >
+			<db:select doc:name="Select" doc:id="797ed70f-9ffc-438a-b08f-158579717046" config-ref="Database_Config">
+				<db:sql ><![CDATA[select * from american]]></db:sql>
+			</db:select>
+		</ee:cache>
+		<ee:transform doc:name="Transform Message" doc:id="ccbb9fc0-a8ce-460f-8871-8e5ea42098aa" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="ca6770eb-73ce-42fc-9b12-69f9681ce3d4" message="flow ended"/>
+	</flow>
+</mule>

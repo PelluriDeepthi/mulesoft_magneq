@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="cache_scope-test-suite.xml" />
+	<munit:test name="cache_scope-test-suite-cache_scopeFlowTest" doc:id="b1c0bca5-0a65-4805-bad4-73e041abce13" description="Test">
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to cache_scopeFlow" doc:id="1a6bf577-ebad-41c3-8ed4-c179e030ca28" name="cache_scopeFlow"/>
+		</munit:execution>
+	</munit:test>
+
+
+</mule>
