@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="57ed29d5-8eb6-4fed-882e-07598cf04e86" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="8b356582-1ecf-4f67-a5ed-fa34117b9dee" >
+		<db:my-sql-connection host="iltdb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
+	</db:config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="4351d7c5-6c39-4bdc-bfd9-5d853b473dee" >
+		<vm:connection >
+			<reconnection failsDeployment="true" >
+				<reconnect />
+			</reconnection>
+		</vm:connection>
+		<vm:queues >
+			<vm:queue queueName="test" />
+		</vm:queues>
+	</vm:config>
+	<flow name="vmqFlow" doc:id="5b706345-f70a-4e33-8253-8524c9736763" >
+		<http:listener doc:name="Listener" doc:id="890b97cf-ad48-4e7b-b7fb-e6dd4e1272c5" config-ref="HTTP_Listener_config" path="/vmq"/>
+		<logger level="INFO" doc:name="Logger" doc:id="c9692f64-1a57-48cb-ba89-f7544cec23a0" />
+		<db:select doc:name="Select" doc:id="c93f0c8c-233e-4243-82de-cd1e11dc3440" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from accounts]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="29f53bba-50ec-4697-879f-4d43be44af47" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="181476e2-b9e8-4aa3-a28d-867c92d1f53d" />
+		<vm:publish doc:name="Publish" doc:id="5e138688-8cde-49b4-9955-18e5756e4b28" config-ref="VM_Config" queueName="test"/>
+	</flow>
+	<flow name="vmqFlow1" doc:id="5981339f-f2e5-40b7-b3bf-a2dedf2a0e43" >
+		<vm:listener doc:name="Listener" doc:id="f697f25e-d14d-40a4-8ff9-c80ee88697c6" config-ref="VM_Config" queueName="test"/>
+		<logger level="INFO" doc:name="Logger" doc:id="93061e11-0977-44e4-a0ee-f0c4f307f71c" />
+		<ee:transform doc:name="Transform Message" doc:id="50a3aac4-4abb-49f0-a072-6df290755ccf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
