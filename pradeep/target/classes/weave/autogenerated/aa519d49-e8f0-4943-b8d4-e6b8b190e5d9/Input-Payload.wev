@@ -1,0 +1,11 @@
+%dw 2.0
+
+type auto_aa519d49_e8f0_4943_b8d4_e6b8b190e5d9_Input_Payload = {|
+  country: String, 
+  totalCases: Number, 
+  positiveCases: Number, 
+  recoveredCases: Number, 
+  deathCases: Number, 
+  invalidCases: Number
+|}
+

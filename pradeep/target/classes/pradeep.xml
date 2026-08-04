@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+    xmlns:db="http://www.mulesoft.org/schema/mule/db"
+    xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" 
+    xmlns:http="http://www.mulesoft.org/schema/mule/http" 
+    xmlns="http://www.mulesoft.org/schema/mule/core" 
+    xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+
+    <!-- ==================== CONFIGURATIONS ==================== -->
+    <http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+
+    <db:config name="Database_Config" doc:name="Database Config">
+        <db:my-sql-connection 
+            host="sql12.freesqldatabase.com" 
+            port="3306" 
+            user="sql12827278" 
+            password="X1Hg5zRsXt" 
+            database="sql12827278"/>
+    </db:config>
+
+    <!-- ==================== MAIN FLOW ==================== -->
+    <api-gateway:autodiscovery apiId="20924782" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="c03bc5d0-3a5d-4cf1-88cf-861c39e0cc15" flowRef="covid-management-flow" />
+	<flow name="covid-management-flow">
+
+        <http:listener 
+            doc:name="Listener" 
+            config-ref="HTTP_Listener_config" 
+            path="/tm"/>
+
+        <logger 
+            level="INFO" 
+            doc:name="Logger" 
+            message="COVID Management Flow Started"/>
+
+        <choice doc:name="Choice">
+
+            <!-- ========== REGISTER CASE ========== 
+                POSTMAN:
+                POST http://localhost:8081/tm?action=register
+                Body (raw JSON):
+                {
+                    "caseId": "C2001",
+                    "patientName": "Test User",
+                    "country": "India",
+                    "age": 30
+                }
+            -->
+            <when expression="#[attributes.queryParams.action == 'register']">
+                <logger level="INFO" message="Register Case"/>
+
+                <set-variable 
+                    variableName="incomingPayload" 
+                    value="#[payload]" 
+                    doc:name="Store Payload"/>
+
+                <db:select doc:name="Check Existing Case" config-ref="Database_Config">
+                    <db:sql><![CDATA[SELECT * FROM covid_cases 
+WHERE case_id = :caseId 
+ORDER BY id DESC LIMIT 1
+                    ]]></db:sql>
+                    <db:input-parameters><![CDATA[#[{caseId: vars.incomingPayload.caseId}]]]></db:input-parameters>
+                </db:select>
+
+                <choice doc:name="New or Existing">
+
+                    <when expression="#[sizeOf(payload) > 0 and payload[0].status != 'RECOVERED']">
+                        <logger level="INFO" message="Existing Active Case - Updating to POSITIVE"/>
+                        <db:update doc:name="Update Existing" config-ref="Database_Config">
+                            <db:sql><![CDATA[UPDATE covid_cases,
+SET status = 'POSITIVE', registered_date = NOW() 
+WHERE case_id = :caseId
+                            ]]></db:sql>
+                            <db:input-parameters><![CDATA[#[{
+	caseId: vars.incomingPayload.caseId
+}]]]></db:input-parameters>
+                        </db:update>
+                    </when>
+
+                    <otherwise>
+                        <logger level="INFO" message="New Case - Inserting"/>
+                        <db:insert doc:name="Insert New Case" config-ref="Database_Config">
+                            <db:sql><![CDATA[INSERT INTO covid_cases 
+(case_id, patient_name, country, age, status, registered_date)
+VALUES (:caseId, :name, :country, :age, 'POSITIVE', NOW())
+                            ]]></db:sql>
+                            <db:input-parameters><![CDATA[#[{
+	caseId: vars.incomingPayload.caseId,
+	name:    vars.incomingPayload.patientName,
+	country: vars.incomingPayload.country,
+	age:     vars.incomingPayload.age
+}]]]></db:input-parameters>
+                        </db:insert>
+                    </otherwise>
+
+                </choice>
+
+                <ee:transform doc:name="Success Response">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    status: "SUCCESS",
+    message: "Case Registered Successfully",
+    caseId: vars.incomingPayload.caseId
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <!-- ========== UPDATE CASE STATUS ========== 
+                POSTMAN:
+                POST http://localhost:8081/tm?action=update
+                Body (raw JSON):
+                {
+                    "caseId": "C2001",
+                    "status": "RECOVERED"
+                }
+            -->
+            <when expression="#[attributes.queryParams.action == 'update']">
+                <logger level="INFO" message="Updating Case Status"/>
+
+                <set-variable 
+                    variableName="incomingPayload" 
+                    value="#[payload]" 
+                    doc:name="Store Payload"/>
+
+                <db:update doc:name="Update Status" config-ref="Database_Config">
+                    <db:sql><![CDATA[UPDATE covid_cases 
+SET status = :newStatus 
+WHERE case_id = :caseId
+                    ]]></db:sql>
+                    <db:input-parameters><![CDATA[#[{
+	newStatus: vars.incomingPayload.status,
+    caseId:    vars.incomingPayload.caseId
+}]]]></db:input-parameters>
+                </db:update>
+
+                <ee:transform doc:name="Success Response">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    status: "SUCCESS",
+    message: "Case Status Updated",
+    caseId: vars.incomingPayload.caseId,
+    newStatus: vars.incomingPayload.status
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <!-- ========== FETCH ALL CASES ========== 
+                POSTMAN:
+                GET http://localhost:8081/tm?action=fetch
+            -->
+            <when expression="#[attributes.queryParams.action == 'fetch']">
+                <logger level="INFO" message="Fetching All Cases"/>
+
+                <db:select doc:name="Select All" config-ref="Database_Config">
+                    <db:sql><![CDATA[SELECT * FROM covid_cases]]></db:sql>
+                </db:select>
+
+                <ee:transform doc:name="Transform to JSON">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map (item) -> {
+    id:             item.id,
+    caseId:         item.case_id,
+    patientName:    item.patient_name,
+    country:        item.country,
+    age:            item.age,
+    status:         item.status,
+    registeredDate: item.registered_date as String default ""
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <!-- ========== MONITORING: All POSITIVE Cases ========== 
+                POSTMAN:
+                GET http://localhost:8081/tm?action=monitoring
+            -->
+            <when expression="#[attributes.queryParams.action == 'monitoring']">
+                <logger level="INFO" message="Fetching All POSITIVE Cases"/>
+
+                <db:select doc:name="Select Positive" config-ref="Database_Config">
+                    <db:sql><![CDATA[SELECT * FROM covid_cases 
+WHERE status = 'POSITIVE'
+                    ]]></db:sql>
+                </db:select>
+
+                <ee:transform doc:name="Transform to JSON">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload map (item) -> {
+    id:             item.id,
+    caseId:         item.case_id,
+    patientName:    item.patient_name,
+    country:        item.country,
+    age:            item.age,
+    status:         item.status,
+    registeredDate: item.registered_date as String default ""
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </when>
+
+            <!-- ========== COUNTRY REPORT ========== 
+                POSTMAN:
+                GET http://localhost:8081/tm?action=country&country=India
+            -->
+            <when expression="#[attributes.queryParams.action == 'country']">
+                <logger level="INFO" message="Country Report"/>
+
+                <set-variable 
+                    variableName="country" 
+                    value="#[attributes.queryParams.country default 'India']"/>
+
+                <db:select doc:name="Country Stats" config-ref="Database_Config">
+                    <db:sql><![CDATA[
+                        SELECT 
+                            COUNT(*) AS totalCases,
+                            SUM(CASE WHEN status='POSITIVE'  THEN 1 ELSE 0 END) AS positiveCases,
+                            SUM(CASE WHEN status='RECOVERED' THEN 1 ELSE 0 END) AS recoveredCases,
+                            SUM(CASE WHEN status='DEATH'     THEN 1 ELSE 0 END) AS deathCases,
+                            SUM(CASE WHEN status='INVALID'   THEN 1 ELSE 0 END) AS invalidCases
+                        FROM covid_cases 
+                        WHERE country = :country
+                    ]]></db:sql>
+                    <db:input-parameters><![CDATA[#[{
+	country: vars.country
+}]]]></db:input-parameters>
+                </db:select>
+
+                <ee:transform doc:name="Format Report">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    country:        vars.country,
+    totalCases:     (payload[0].totalCases     default 0) as Number,
+    positiveCases:  (payload[0].positiveCases  default 0) as Number,
+    recoveredCases: (payload[0].recoveredCases default 0) as Number,
+    deathCases:     (payload[0].deathCases     default 0) as Number,
+    invalidCases:   (payload[0].invalidCases   default 0) as Number
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+				<flow-ref doc:name="Flow Reference" doc:id="7fecd585-1785-4ab2-9e97-349b42110e14" name="invalidate-old-cases-flow"/>
+            
+</when>
+
+            <!-- ========== INVALID ACTION ========== -->
+            <otherwise>
+                <ee:transform doc:name="Invalid Action">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    status: "ERROR",
+    message: "Invalid Action. Use: register, update, fetch, monitoring, country"
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+            </otherwise>
+
+        </choice>
+
+        <logger 
+            level="INFO" 
+            doc:name="Logger" 
+            message="COVID Management Flow Completed"/>
+
+    </flow>
+
+    <!-- ==================== SCHEDULER FLOW ==================== -->
+    <flow name="invalidate-old-cases-flow" doc:id="aa519d49-e8f0-4943-b8d4-e6b8b190e5d9">
+        <scheduler doc:name="Daily Scheduler">
+            <scheduling-strategy>
+                <fixed-frequency frequency="1" timeUnit="DAYS"/>
+            </scheduling-strategy>
+        </scheduler>
+
+        <logger 
+            level="INFO" 
+            message="Scheduler Running - Marking old POSITIVE cases as INVALID"/>
+
+        <foreach doc:name="For Each" doc:id="491c5e44-dad2-47f1-95d3-e64a2ffcb7d5" >
+			<db:update doc:name="Mark Old Cases INVALID" config-ref="Database_Config">
+            <db:sql><![CDATA[UPDATE covid_cases
+SET status = 'INVALID'
+WHERE registered_date < NOW() - INTERVAL 20 DAY
+AND status = 'POSITIVE'
+            ]]></db:sql>
+        </db:update>
+		</foreach>
+
+        <logger level="INFO" message="Scheduler Completed"/>
+    </flow>
+
+</mule>
