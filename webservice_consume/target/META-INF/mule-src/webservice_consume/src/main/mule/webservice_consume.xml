@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c0f928dd-e3c2-446d-b3a4-8d6587a3e9ac" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<wsc:config name="Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="94a87307-80bd-4e78-877e-1a6cbc2413b8" >
+		<wsc:connection soapVersion="SOAP12" wsdlLocation="calculator.wsdl" service="Calculator" port="CalculatorSoap12" address="http://www.dneonline.com/calculator.asmx"/>
+	</wsc:config>
+	<flow name="webservice_consumeFlow" doc:id="8be8d48e-1c72-47be-be78-87d6b25d1bee" >
+		<http:listener doc:name="Listener" doc:id="f8cfc982-4d31-48b9-a69d-8c37997d495e" config-ref="HTTP_Listener_config" path="/consume"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f34e900a-6ac6-4f5b-8810-24fddcd582d6" />
+		<ee:transform doc:name="Transform Message" doc:id="1012c727-3d1b-49a5-ae9d-0806f06ffb66" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://tempuri.org/
+---
+{
+    ns0#Divide: {
+        ns0#intA: 30,
+        ns0#intB: 10
+    }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<wsc:consume operation="Divide" doc:name="Consume" doc:id="ea2af0df-8981-4edf-8b29-5558c93afe4e" config-ref="Web_Service_Consumer_Config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e23f036d-9dc7-49b1-bf35-2788398c9e2a" />
+	</flow>
+</mule>
