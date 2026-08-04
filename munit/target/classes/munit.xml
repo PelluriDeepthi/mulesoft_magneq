@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="587c4ef6-1cb2-4e6c-8452-612814697736" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_config" doc:name="HTTP Request config" doc:id="13462ddc-f320-43f8-aea4-bb64e0129e81" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<flow name="munitFlow" doc:id="731c958a-e18e-4d9f-880f-b0f85b0e4766" >
+		<http:listener doc:name="Listener" doc:id="3689df84-9b6c-4a93-83f1-04cacbe9b66a" config-ref="HTTP_Listener_config" path="/munit"/>
+		<logger level="INFO" doc:name="Logger" doc:id="3dc5767c-407d-431f-889f-bbdb8dee9c9b" />
+		<http:request doc:name="Request" doc:id="8a545369-e09f-4ba4-a79b-ce21963b88ec" config-ref="HTTP_Request_config" path="/api/flights"/>
+		<ee:transform doc:name="Transform Message" doc:id="bfb43334-5881-45ff-806c-92dc1d51863a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="405af4bb-efb6-47cc-9a7e-d8ae314bf516" />
+	</flow>
+</mule>
