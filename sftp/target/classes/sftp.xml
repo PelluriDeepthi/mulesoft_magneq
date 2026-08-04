@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sftp="http://www.mulesoft.org/schema/mule/sftp" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/sftp http://www.mulesoft.org/schema/mule/sftp/current/mule-sftp.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9cb44b98-9176-476a-97dd-fffbd854bf41" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<sftp:config name="SFTP_Config" doc:name="SFTP Config" doc:id="f0427430-8401-4f1d-b154-df00506ae68a" >
+		<sftp:connection host="a1f51.us-west-1.sftpcloud.io" username="3b9aa6288e914394937d0151104112bd" password="QEKyphFSw2JbrsxeqiKKisqoeKt1z8sf" />
+	</sftp:config>
+	<flow name="sftpFlow" doc:id="63adb4f8-22da-4b13-8ecc-bfd9272d71f3" >
+		<http:listener doc:name="Listener" doc:id="17b75e6c-ab98-4b67-911b-02632666c712" config-ref="HTTP_Listener_config" path="/sftp"/>
+		<logger level="INFO" doc:name="Logger" doc:id="17bb7123-a535-4580-90f2-9d27086f2570" />
+		<sftp:read doc:id="65875e46-5a35-4199-8316-924e27280a24" config-ref="SFTP_Config" path="/anitha/badugula/assignment2.txt"/>
+		<!-- [STUDIO:"List"]<sftp:list doc:name="List" doc:id="832a7045-2171-4cf3-85f8-682acd1304ee" config-ref="SFTP_Config" directoryPath="/anitha/badugula"/> [STUDIO] -->
+		<!-- [STUDIO:"Rename"]<sftp:rename doc:name="Rename" doc:id="c8ed9082-e53c-4430-8051-a27e568f55c3" config-ref="SFTP_Config" path="/anitha/badugula/ANITHA-Mulesoft.docx" to="ANITHA-Mulesoft.docx" overwrite="true"/> [STUDIO] -->
+		<sftp:write doc:name="Write" doc:id="5e505a9f-a7b8-43e6-83aa-f0a5946853b2" config-ref="SFTP_Config" path="/anitha/badugula/assignment2-write.txt"/>
+		<!-- [STUDIO:"Create directory"]<sftp:create-directory doc:name="Create directory" doc:id="28f14df4-6c5b-46b4-9bdd-33d5398e2d46" config-ref="SFTP_Config" directoryPath="/Deepthi_Sharma"/> [STUDIO] -->
+		<ee:transform doc:name="Transform Message" doc:id="d921c04f-3989-4ed8-aff9-9e5c8856f8e7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="7c82c29a-472d-4a51-98a4-0a17e589a873" />
+	</flow>
+</mule>
