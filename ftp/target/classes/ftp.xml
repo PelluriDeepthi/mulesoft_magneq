@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0665c87e-e4dd-4ba3-970f-30a06a24fc7e" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<ftp:config name="FTP_Config" doc:name="FTP Config" doc:id="138719eb-94ef-42a1-928b-52d0d1fc3322" >
+		<ftp:connection host="a1f51.us-west-1.sftpcloud.io" username="3b9aa6288e914394937d0151104112bd" password="QEKyphFSw2JbrsxeqiKKisqoeKt1z8sf" />
+	</ftp:config>
+	<flow name="ftpFlow" doc:id="0f83e03b-0e4b-4514-b18d-563761df7fe8" >
+		<http:listener doc:name="Listener" doc:id="923d3a89-8c65-4311-be7a-a5cc61a23625" config-ref="HTTP_Listener_config" path="/ftp"/>
+		<logger level="INFO" doc:name="Logger" doc:id="427f6e54-d389-4c56-b0cc-319be5ee8982" />
+		<ftp:read doc:name="Read" doc:id="b797d5d3-92dd-4f68-828a-d75362d0dfa8" config-ref="FTP_Config" path="/Deepthi_Sharma/1CloudHub_interview_questions.txt"/>
+		<ee:transform doc:name="Transform Message" doc:id="a2d25079-ee69-4f11-8061-48e7c54df94c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="06c73f18-a570-43a3-ac9d-a6c30ac06f21" />
+	</flow>
+</mule>
