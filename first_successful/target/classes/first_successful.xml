@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="6ecfd345-0951-4037-95e1-a7bddb65d12b" >
+		<http:listener-connection host="localhost" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_config" doc:name="HTTP Request config" doc:id="24e036a0-66fc-4aa4-ae0c-9eaabcee55e9" >
+		<http:request-connection host="training4-american-ws.cloudhub.io" port="80" />
+	</http:request-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="77c08123-50a7-4422-a5e9-1e76e304b17a" >
+		<db:my-sql-connection host="iltdb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
+	</db:config>
+	<flow name="first_successfulFlow" doc:id="623e1d82-909f-4ca3-9578-dde93ef4be22" >
+		<http:listener doc:name="Listener" doc:id="711f9f64-1f64-4c80-8fd5-8e5e5b6202cf" config-ref="HTTP_Listener_config" path="/fs"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7909ee79-6a6b-4be1-a7d1-d2432a7884f4" />
+		<first-successful doc:name="First Successful" doc:id="f9250ef5-f0cb-44b4-8d4d-35a0add5835b" >
+			<route >
+				<http:request doc:name="Request" doc:id="b96f5fd8-3736-4ca0-af6f-cdf7af3170a0" config-ref="HTTP_Request_config" path="/api/flight"/>
+			</route>
+			<route >
+				<http:request doc:name="Request" doc:id="f1acb2b5-1cef-4cb4-b598-9739cc5e30a8" config-ref="HTTP_Request_config" path="/api/flights"/>
+			</route>
+			<route >
+				<db:select doc:name="Select" doc:id="28387f36-1e50-4bd9-a197-5becf0e021d4" config-ref="Database_Config">
+					<db:sql ><![CDATA[select * from accounts]]></db:sql>
+				</db:select>
+			</route>
+		</first-successful>
+		<ee:transform doc:name="Transform Message" doc:id="8ff3bd68-0a84-4098-b03d-a81dcc4e4b99" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="f5bc794e-bcc5-4b8e-af48-f85bf878bea0" />
+	</flow>
+</mule>
