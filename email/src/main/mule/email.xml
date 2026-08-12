@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="3286b216-bb6d-4d29-b9ca-884539b6d57c" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="71240929-325d-4a6a-bdbc-7c5a959cab37" >
+		<email:smtp-connection host="SMTP.gmail.com" user="pellurideepthi97@gmail.com" password="vrhsviuaikrslygf">
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+		<expiration-policy />
+	</email:smtp-config>
+	<flow name="emailFlow" doc:id="189360f6-9ff1-414c-836e-4623f721f388" >
+		<http:listener doc:name="Listener" doc:id="616e412f-5758-4903-9d80-13c95e7c3ca6" config-ref="HTTP_Listener_config" path="/email"/>
+		<logger level="INFO" doc:name="Logger" doc:id="311602ba-146f-413e-a42d-ff8bddab67ea" />
+		<ee:transform doc:name="Transform Message" doc:id="8c6c7b92-012c-4916-b13b-56124183d635" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Email sent successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<email:send doc:name="Send" doc:id="868ce17f-8864-4618-93d3-6b9446f48ae2" config-ref="Email_SMTP" fromAddress="pellurideepthi97@gmail.com" subject="Trail - Email Notification">
+			<email:to-addresses >
+				<email:to-address value="pvaishnavideepthi@gmail.com" />
+			</email:to-addresses>
+		</email:send>
+		<logger level="INFO" doc:name="Logger" doc:id="88455cb5-c7b5-4877-b9e9-6f599505d1ff" />
+	</flow>
+</mule>
